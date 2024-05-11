@@ -6,33 +6,49 @@ public class Player : MonoBehaviour {
 
 
     [SerializeField] private float moveSpeed = 7f; //Velocidad de movimiento
+    [SerializeField] private GameInput gameInput;
 
     private bool isWalking;
 
     private void Update() {
-        Vector2 inputVector = new Vector2(0, 0);
-
-        //Moverse hacia delante
-        if (Input.GetKey(KeyCode.W)) { 
-            inputVector.y = +1;
-        }
-        //Moverse hacia atrás
-        if (Input.GetKey(KeyCode.S)) {
-            inputVector.y = -1;
-        }
-        //Moverse hacia la izquierda
-        if (Input.GetKey(KeyCode.A)) {
-            inputVector.x = -1;
-        }
-        //Moverse hacia la derecha
-        if (Input.GetKey(KeyCode.D)) {
-            inputVector.x = +1;
-        }
-
-        inputVector = inputVector.normalized;
+        Vector2 inputVector = gameInput.GetMovementVectorNormalized();
 
         Vector3 moveDir = new Vector3(inputVector.x, 0f, inputVector.y); //Creamos un vector3 y sustituimos los ejes x y z por las cordenadas del vector2
-        transform.position += moveDir * moveSpeed * Time.deltaTime;
+
+        float moveDistance = moveSpeed * Time.deltaTime;
+        float playerRadius = 0.7f;
+        float playerHeight = 2f;
+        bool canMove = !Physics.CapsuleCast(transform.position, transform.position + Vector3.up * playerHeight, playerRadius, moveDir, moveDistance);
+
+        if (!canMove) {
+            //No podemos movernos hacia moveDir
+
+            //Se intenta mover solo en X
+            Vector3 moveDirX = new Vector3(moveDir.x, 0, 0).normalized;
+            canMove = !Physics.CapsuleCast(transform.position, transform.position + Vector3.up * playerHeight, playerRadius, moveDirX, moveDistance);
+
+            if (canMove) {
+                //Solo se puede mover en X
+                moveDir = moveDirX;
+            } else {
+                //No se puede mover solamente en X
+
+                //Se intenta mover solo en Z
+                Vector3 moveDirZ = new Vector3(0, 0, moveDir.z).normalized;
+                canMove = !Physics.CapsuleCast(transform.position, transform.position + Vector3.up * playerHeight, playerRadius, moveDirZ, moveDistance);
+
+                if (canMove) {
+                    //Solo se puede mover en Z
+                    moveDir = moveDirZ;
+                } else {
+                    //No se puede mover en ninguna dirección
+                }
+            }
+        }
+
+        if (canMove) {
+            transform.position += moveDir * moveDistance;
+        }
 
         isWalking = moveDir != Vector3.zero; //Si la velocidad de movimiento es diferente de 0, la variable "estáCaminando" cambiará a true
 
