@@ -7,10 +7,61 @@ public class Player : MonoBehaviour {
 
     [SerializeField] private float moveSpeed = 7f; //Velocidad de movimiento
     [SerializeField] private GameInput gameInput;
+    [SerializeField] private LayerMask countersLayerMask;
 
     private bool isWalking;
+    private Vector3 lastInteractDir;
+
+    private void Start() {
+        gameInput.OnInteractAction += GameInput_OnInteractAction;
+    }
+
+    private void GameInput_OnInteractAction(object sender, System.EventArgs e) {
+        Vector2 inputVector = gameInput.GetMovementVectorNormalized();
+
+        Vector3 moveDir = new Vector3(inputVector.x, 0f, inputVector.y);
+
+        if (moveDir != Vector3.zero) {
+            lastInteractDir = moveDir;
+        }
+
+        float interactDistance = 2f;
+        if (Physics.Raycast(transform.position, lastInteractDir, out RaycastHit raycastHit, interactDistance, countersLayerMask)) {
+            if (raycastHit.transform.TryGetComponent(out ClearCounter clearCounter)) {
+                // Has ClearCounter
+                clearCounter.Interact();
+            }
+        }
+    }
 
     private void Update() {
+        HandleMovement();
+        HandleInteractions();
+    }
+
+    public bool IsWalking() {
+        return isWalking;
+    }
+
+    private void HandleInteractions() {
+        Vector2 inputVector = gameInput.GetMovementVectorNormalized();
+
+        Vector3 moveDir = new Vector3(inputVector.x, 0f, inputVector.y);
+
+        if (moveDir != Vector3.zero) {
+            lastInteractDir = moveDir;
+        }
+
+        float interactDistance = 2f;
+        if (Physics.Raycast(transform.position, lastInteractDir, out RaycastHit raycastHit, interactDistance, countersLayerMask)) {
+            if (raycastHit.transform.TryGetComponent(out ClearCounter clearCounter)) {
+                //Tiene el componente ClearCounter
+                
+            }
+        }
+    }
+
+    private void HandleMovement() {
         Vector2 inputVector = gameInput.GetMovementVectorNormalized();
 
         Vector3 moveDir = new Vector3(inputVector.x, 0f, inputVector.y); //Creamos un vector3 y sustituimos los ejes x y z por las cordenadas del vector2
@@ -54,11 +105,7 @@ public class Player : MonoBehaviour {
 
         float rotateSpeed = 10f; //La velocidad de rotacion del personaje
         transform.forward = Vector3.Slerp(transform.forward, moveDir, Time.deltaTime * rotateSpeed); //Actualizamos el "forward" para que el personaje gire en la dirección a la que está caminando
-       
-    }
 
-    public bool IsWalking() {
-        return isWalking;
     }
 
 }
