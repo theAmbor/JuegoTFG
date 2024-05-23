@@ -138,8 +138,10 @@ public class Player : MonoBehaviour, IKitchenObjectParent {
         isWalking = moveDir != Vector3.zero; //Si la velocidad de movimiento es diferente de 0, la variable "estáCaminando" cambiará a true
 
         float rotateSpeed = 10f; //La velocidad de rotacion del personaje
-        transform.forward = Vector3.Slerp(transform.forward, moveDir, Time.deltaTime * rotateSpeed); //Actualizamos el "forward" para que el personaje gire en la dirección a la que está caminando
-
+        if (moveDir != Vector3.zero) {
+            transform.forward = Vector3.Slerp(transform.forward, moveDir, Time.deltaTime * rotateSpeed); //Actualizamos el "forward" para que el personaje gire en la dirección a la que está caminando
+        }
+        
     }
 
     private void SetSelectedCounter(BaseCounter selectedCounter) {
